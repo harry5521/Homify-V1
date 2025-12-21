@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'service_management.dart';
+import 'provider_profile_page.dart'; 
 
 class ProviderDashboard extends StatelessWidget {
   const ProviderDashboard({super.key});
@@ -11,13 +12,20 @@ class ProviderDashboard extends StatelessWidget {
         title: const Text("Provider Portal", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.teal,
         leading: IconButton(
-    icon: const Icon(Icons.arrow_back, color: Colors.white),
-    onPressed: () {
-      Navigator.pushReplacementNamed(context, '/login');
-     // This takes the user back to the previous screen
-    },
-  ),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pushReplacementNamed(context, '/login');
+          },
+        ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, '/login');
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -34,7 +42,27 @@ class ProviderDashboard extends StatelessWidget {
             ),
             const SizedBox(height: 40),
             
-            // Service Management Button
+            // 1. Provider Profile Button (Now at the top)
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProviderProfilePage()),
+                );
+              },
+              icon: const Icon(Icons.person, color: Colors.white),
+              label: const Text("Provider Profile", style: TextStyle(fontSize: 18)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+
+            const SizedBox(height: 20), // Spacing between buttons
+
+            // 2. Service Management Button (Now at the bottom)
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.push(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'add_service_page.dart'; // Import the new page
 
 class ServiceManagementPage extends StatefulWidget {
   const ServiceManagementPage({super.key});
@@ -9,13 +10,18 @@ class ServiceManagementPage extends StatefulWidget {
 
 class _ServiceManagementPageState extends State<ServiceManagementPage> {
   final List<String> _myServices = ["Home Cleaning", "Plumbing"];
-  final TextEditingController _serviceController = TextEditingController();
 
-  void _addService() {
-    if (_serviceController.text.isNotEmpty) {
+  // Logic to navigate and wait for the new service name
+  void _navigateAndAddService() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => AddServicePage()),
+    );
+
+    // If result is received, update the list
+    if (result != null && result is String) {
       setState(() {
-        _myServices.add(_serviceController.text);
-        _serviceController.clear();
+        _myServices.add(result);
       });
     }
   }
@@ -36,30 +42,19 @@ class _ServiceManagementPageState extends State<ServiceManagementPage> {
       ),
       body: Column(
         children: [
-          // Header Section
+          // Header Section - Simplified to just a button and label
           Container(
             padding: const EdgeInsets.all(20),
             color: Colors.teal.withOpacity(0.1),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _serviceController,
-                    decoration: const InputDecoration(
-                      hintText: "Enter service name (e.g. Painting)",
-                      border: OutlineInputBorder(),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.teal),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                  ),
+                const Text(
+                  "Your Active Services",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal),
                 ),
-                const SizedBox(width: 10),
-                // FIXED SECTION BELOW
                 IconButton.filled(
-                  onPressed: _addService,
+                  onPressed: _navigateAndAddService, // Calls the navigation logic
                   icon: const Icon(Icons.add),
                   style: IconButton.styleFrom(
                     backgroundColor: Colors.teal,
@@ -70,7 +65,6 @@ class _ServiceManagementPageState extends State<ServiceManagementPage> {
             ),
           ),
           
-          // List of Services
           Expanded(
             child: _myServices.isEmpty
                 ? const Center(child: Text("No services added yet."))
@@ -95,4 +89,4 @@ class _ServiceManagementPageState extends State<ServiceManagementPage> {
       ),
     );
   }
-}
+} 

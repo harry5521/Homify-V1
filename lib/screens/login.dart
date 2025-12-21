@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
+
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -64,7 +66,7 @@ class _LoginPageState extends State<LoginPage> {
                     ElevatedButton(
                       onPressed: () {
                         // For now, bypass to dashboard
-                        Navigator.pushReplacementNamed(context, '/provider_dashboard');
+                       Navigator.pushReplacementNamed(context, '/provider_dashboard');
                       },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 15),

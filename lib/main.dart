@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-// Import your register page file here
+// Screens
 import 'screens/register.dart'; 
 import 'screens/login.dart'; 
 import 'screens/splash_screen.dart';
+// Provider Screens
 import 'screens/provider_dashboard.dart';
 import 'screens/service_management.dart';
 import 'screens/add_service_page.dart';
 import 'screens/provider_profile_page.dart';
+// Customer Screens
+import 'screens/customer_dashboard.dart';
+import 'screens/customer_profile_page.dart';
 
 void main() {
   runApp(const HomifyApp());
@@ -21,22 +25,27 @@ class HomifyApp extends StatelessWidget {
       title: 'Homify',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.indigo,
+        // Set to Teal for consistent branding
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
       ),
-      // Set the starting page
       initialRoute: '/splash',
-      // Define the routes map
       routes: {
+        // Common Routes
         '/splash': (context) => const SplashScreen(),
         '/login': (context) => const LoginPage(),
-        '/register': (context) => RegisterPage(), // The page we built earlier
-        '/provider_dashboard': (context) => ProviderDashboard(), // The page we built earlier
-        '/service_management': (context) => ServiceManagementPage(), // The page we built earlier
-        '/add_service_page': (context) => const AddServicePage(),
-        '/provider_profile_page': (context) => ProviderProfilePage(),
- 
+        '/register': (context) => const RegisterPage(),
 
+        // Provider Routes
+        '/provider_dashboard': (context) => const ProviderDashboard(),
+        '/service_management': (context) => const ServiceManagementPage(),
+        '/add_service_page': (context) => const AddServicePage(),
+        '/provider_profile_page': (context) => const ProviderProfilePage(),
+
+        // Customer Routes
+        '/customer_dashboard': (context) => const CustomerDashboard(),
+        '/customer_profile_page': (context) => const CustomerProfilePage(),
+        
       },
     );
   }

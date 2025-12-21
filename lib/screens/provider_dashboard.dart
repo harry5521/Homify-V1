@@ -11,12 +11,6 @@ class ProviderDashboard extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Provider Portal", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.teal,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, '/login');
-          },
-        ),
         centerTitle: true,
         actions: [
           IconButton(

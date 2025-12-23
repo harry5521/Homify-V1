@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
-
-
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -13,6 +11,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isObscured = true;
 
   @override
   Widget build(BuildContext context) {
@@ -53,11 +52,25 @@ class _LoginPageState extends State<LoginPage> {
                     // Password Field
                     TextFormField(
                       controller: _passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
+                      obscureText: _isObscured,
+                      decoration: InputDecoration(
                         labelText: "Password",
-                        prefixIcon: Icon(Icons.lock_outline),
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: Padding(
+                          padding: const EdgeInsets.only(right: 10.0),
+                          child: IconButton(
+                            icon: Icon(
+                              _isObscured ? Icons.visibility_off : Icons.visibility,
+                              color: Colors.grey,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isObscured = !_isObscured;
+                              });
+                            },
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 30),
@@ -65,8 +78,7 @@ class _LoginPageState extends State<LoginPage> {
                     // Login Button
                     ElevatedButton(
                       onPressed: () {
-                        // For now, bypass to dashboard
-                       Navigator.pushReplacementNamed(context, '/customer_dashboard');
+                        Navigator.pushReplacementNamed(context, '/customer_dashboard');
                       },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 15),
@@ -85,7 +97,6 @@ class _LoginPageState extends State<LoginPage> {
                         const Text("Don't have an account? "),
                         GestureDetector(
                           onTap: () {
-                            // Navigate to the Register Page
                             Navigator.pushNamed(context, '/register');
                           },
                           child: const Text(

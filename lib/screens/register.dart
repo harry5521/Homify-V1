@@ -13,9 +13,10 @@ class _RegisterPageState extends State<RegisterPage> {
   // Controllers to get data from fields
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  
+   bool _isObscured = true;
   // Default role
-  String _selectedRole = 'Customer';
+
+ String _selectedRole = 'Customer';
   final List<String> _roles = ['Customer', 'Provider'];
 
   @override
@@ -59,16 +60,31 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Password Field
+                  // Password Field
                     TextFormField(
                       controller: _passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
+                      obscureText: _isObscured,
+                      decoration: InputDecoration(
                         labelText: "Password",
-                        prefixIcon: Icon(Icons.lock_outline),
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: Padding(
+                          padding: const EdgeInsets.only(right: 10.0),
+                          child: IconButton(
+                            icon: Icon(
+                              _isObscured ? Icons.visibility_off : Icons.visibility,
+                              color: Colors.grey,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isObscured = !_isObscured;
+                              });
+                            },
+                          ),
+                        ),
                       ),
                     ),
+                  
                     const SizedBox(height: 20),
 
                     // Role Dropdown (Styled to match)

@@ -17,7 +17,7 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     
     // Changed duration to 5 seconds as you requested
-    Future.delayed(const Duration(seconds: 5), () {
+    Future.delayed(const Duration(seconds: 3), () {
       // Check if the widget is still in the tree before navigating
       if (mounted) {
         // Use pushReplacementNamed to match your main.dart route table

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart'; // 1. Import the package
 
 class ProviderProfilePage extends StatefulWidget {
   const ProviderProfilePage({super.key});
@@ -8,15 +9,24 @@ class ProviderProfilePage extends StatefulWidget {
 }
 
 class _ProviderProfilePageState extends State<ProviderProfilePage> {
-  // Logic to toggle between View and Edit mode
-  bool _isEditing = true; 
+  bool _isEditing = true;
 
-  // Controllers for input
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _cnicController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
+
+  // 2. Define the Masks for CNIC and Phone
+  var cnicMask = MaskTextInputFormatter(
+    mask: '#####-#######-#', 
+    filter: { "#": RegExp(r'[0-9]') }
+  );
+  
+  var phoneMask = MaskTextInputFormatter(
+    mask: '####-#######', 
+    filter: { "#": RegExp(r'[0-9]') }
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +46,6 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            // Profile Header Icon
             const Center(
               child: CircleAvatar(
                 radius: 50,
@@ -45,7 +54,6 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
               ),
             ),
             const SizedBox(height: 30),
-
             _isEditing ? _buildEditForm() : _buildProfileView(),
           ],
         ),
@@ -53,19 +61,35 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     );
   }
 
-  // UI for Inserting/Updating Data
   Widget _buildEditForm() {
     return Column(
       children: [
         _buildTextField(_nameController, "Full Name", Icons.person_outline),
-        _buildTextField(_cnicController, "CNIC No", Icons.badge_outlined),
-        _buildTextField(_phoneController, "Phone No", Icons.phone_outlined),
-        _buildTextField(_emailController, "Email", Icons.email_outlined),
+        
+        // 3. Apply CNIC Mask
+        _buildTextField(
+          _cnicController, 
+          "CNIC No", 
+          Icons.badge_outlined, 
+          formatter: cnicMask,
+          inputType: TextInputType.number
+        ),
+        
+        // 4. Apply Phone Mask
+        _buildTextField(
+          _phoneController, 
+          "Phone No", 
+          Icons.phone_outlined, 
+          formatter: phoneMask,
+          inputType: TextInputType.number
+        ),
+        
+        _buildTextField(_emailController, "Email", Icons.email_outlined, inputType: TextInputType.emailAddress),
         _buildTextField(_addressController, "Address", Icons.home_outlined, maxLines: 2),
         const SizedBox(height: 30),
         ElevatedButton(
           onPressed: () {
-            setState(() => _isEditing = false); // Save and switch to view
+            setState(() => _isEditing = false);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("Profile Saved Successfully!"), backgroundColor: Colors.teal),
             );
@@ -81,7 +105,6 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     );
   }
 
-  // UI for Displaying Saved Data
   Widget _buildProfileView() {
     return Card(
       elevation: 4,
@@ -107,15 +130,23 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     );
   }
 
-  // Helper widget for TextFields
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon, {int maxLines = 1}) {
+  // 5. Helper updated to accept optional formatter and keyboard type
+  Widget _buildTextField(
+    TextEditingController controller, 
+    String label, 
+    IconData icon, 
+    {int maxLines = 1, MaskTextInputFormatter? formatter, TextInputType inputType = TextInputType.text}
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
       child: TextField(
         controller: controller,
         maxLines: maxLines,
+        keyboardType: inputType,
+        inputFormatters: formatter != null ? [formatter] : [],
         decoration: InputDecoration(
           labelText: label,
+          hintText: formatter?.getMask(), // Shows the pattern as a hint
           prefixIcon: Icon(icon, color: Colors.teal),
           border: const OutlineInputBorder(),
           focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.teal, width: 2)),
@@ -124,7 +155,6 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     );
   }
 
-  // Helper widget for View Rows
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'verification_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -115,7 +116,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         if (_formKey.currentState!.validate()) {
                           print("Registering as: $_selectedRole");
                           // Navigate to dashboard after "registration"
-                          Navigator.pushReplacementNamed(context, '/login');
+                          Navigator.pushReplacementNamed(context, '/verification_page');
                         }
                       },
                       style: ElevatedButton.styleFrom(

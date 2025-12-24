@@ -9,6 +9,7 @@ import 'screens/provider_profile_page.dart';
 import 'screens/customer_dashboard.dart';
 import 'screens/customer_profile_page.dart';
 import 'screens/find_services_page.dart';
+import 'screens/verification_page.dart';
 
 void main() {
   runApp(const HomifyApp());
@@ -40,6 +41,7 @@ class HomifyApp extends StatelessWidget {
         '/customer_dashboard': (context) => const CustomerDashboard(),
         '/customer_profile_page': (context) => const CustomerProfilePage(),
         '/find_services': (context) => const FindServicesPage(),
+        '/verification_page': (context) => const VerificationPage(),
         
       },
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'service_management.dart';
 import 'provider_profile_page.dart'; 
+import 'auth_state.dart';
 
 class ProviderDashboard extends StatelessWidget {
   const ProviderDashboard({super.key});
@@ -16,7 +17,8 @@ class ProviderDashboard extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () {
-              Navigator.pushReplacementNamed(context, '/login');
+              SessionManager.logout();
+              Navigator.pushNamedAndRemoveUntil(context, '/login', (r) => false);
             },
           ),
         ],

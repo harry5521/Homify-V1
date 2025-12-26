@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'verification_page.dart';
-import 'package:email_otp/email_otp.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -21,30 +20,79 @@ class _RegisterPageState extends State<RegisterPage> {
   String _selectedRole = 'Customer';
   final List<String> _roles = ['Customer', 'Provider'];
 
-// sxtv pcec tstk ftnw
 
 void _handleRegister() async {
   if (_formKey.currentState!.validate()) {
+    // 1. Capture the data from controllers
     String email = _emailController.text.trim();
-    String password = _passwordController.text;
+    String password = _passwordController.text; 
     String role = _selectedRole;
 
-    // 2. Print to terminal for debugging
-    print("--- NEW USER REGISTERED ---");
-    print("Email: $email");
-    print("Password: $password");
-    print("Role: $role");
-    print("---------------------------");
-
-    // 3. Navigate to Login Screen
-    // We pass a 'success' flag so the Login screen knows to show the alert
-    Navigator.pushReplacementNamed(
-      context, 
-      '/login', 
-      arguments: {'registered': true}
+    // 2. Show a loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(color: Colors.teal),
+      ),
     );
 
-    
+    try {
+      // 3. Insert Data into Firestore 'users' collection
+      // This will create the 'users' collection automatically if it doesn't exist
+      await FirebaseFirestore.instance.collection('users').add({
+        'email': email,
+        'password': password, // Note: In a production app, never store passwords in plain text
+        'role': role,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // Close the loading spinner
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      // 4. Print to terminal for confirmation
+      print("--- USER DATA SAVED TO FIRESTORE ---");
+      print("Email: $email | Role: $role");
+
+      // 5. Show Success Dialog and Navigate
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green),
+              SizedBox(width: 10),
+              Text("Registration Successful"),
+            ],
+          ),
+          content: Text("Account for $email has been created. You can now log in."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                // Navigate to Login Screen
+                Navigator.pushReplacementNamed(context, '/login');
+              },
+              child: const Text("OK", style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      // Close the loading spinner if an error occurs
+      Navigator.pop(context);
+      
+      // Show error message
+      print("Firestore Error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to register: ${e.toString()}"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }
 

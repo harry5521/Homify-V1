@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'customer_profile_page.dart'; 
 import 'find_services_page.dart';
 import 'about_page.dart';
+import 'auth_state.dart';
 
 class CustomerDashboard extends StatelessWidget {
   const CustomerDashboard({super.key});
@@ -44,7 +45,10 @@ class CustomerDashboard extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             tooltip: 'Logout',
-            onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
+            onPressed: () {
+              SessionManager.logout();
+              Navigator.pushNamedAndRemoveUntil(context, '/login', (r) => false);
+            },           
           ),
         ],
       ),

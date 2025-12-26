@@ -11,7 +11,16 @@ import 'screens/customer_profile_page.dart';
 import 'screens/find_services_page.dart';
 import 'screens/verification_page.dart';
 
-void main() {
+// Firebase Integration
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const HomifyApp());
 }
 
@@ -41,7 +50,7 @@ class HomifyApp extends StatelessWidget {
         '/customer_dashboard': (context) => const CustomerDashboard(),
         '/customer_profile_page': (context) => const CustomerProfilePage(),
         '/find_services': (context) => const FindServicesPage(),
-        '/verification_page': (context) => const VerificationPage(),
+        // '/verification_page': (context) => const VerificationPage(),
         
       },
     );

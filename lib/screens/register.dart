@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'verification_page.dart';
+import 'package:email_otp/email_otp.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -17,8 +18,35 @@ class _RegisterPageState extends State<RegisterPage> {
    bool _isObscured = true;
   // Default role
 
- String _selectedRole = 'Customer';
+  String _selectedRole = 'Customer';
   final List<String> _roles = ['Customer', 'Provider'];
+
+// sxtv pcec tstk ftnw
+
+void _handleRegister() async {
+  if (_formKey.currentState!.validate()) {
+    String email = _emailController.text.trim();
+    String password = _passwordController.text;
+    String role = _selectedRole;
+
+    // 2. Print to terminal for debugging
+    print("--- NEW USER REGISTERED ---");
+    print("Email: $email");
+    print("Password: $password");
+    print("Role: $role");
+    print("---------------------------");
+
+    // 3. Navigate to Login Screen
+    // We pass a 'success' flag so the Login screen knows to show the alert
+    Navigator.pushReplacementNamed(
+      context, 
+      '/login', 
+      arguments: {'registered': true}
+    );
+
+    
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +86,14 @@ class _RegisterPageState extends State<RegisterPage> {
                         border: OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) return 'Email is required';
+                        // Regex for email format validation
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                          return 'Enter a valid email address';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 20),
 
@@ -84,6 +120,11 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ),
                       ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) return 'Password is required';
+                        if (value.length < 8) return 'Password must be at least 8 characters';
+                        return null;
+                      },
                     ),
                   
                     const SizedBox(height: 20),
@@ -112,13 +153,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     // Register Button
                     ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          print("Registering as: $_selectedRole");
-                          // Navigate to dashboard after "registration"
-                          Navigator.pushReplacementNamed(context, '/verification_page');
-                        }
-                      },
+                      onPressed: _handleRegister,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 15),
                         backgroundColor: Colors.teal,

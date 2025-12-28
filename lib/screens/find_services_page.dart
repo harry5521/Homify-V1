@@ -148,84 +148,115 @@ class _FindServicesPageState extends State<FindServicesPage> {
                 if (docs.isEmpty) return const Center(child: Text("No records found"));
 
                 return ListView.builder(
-                  itemCount: docs.length,
-                  itemBuilder: (context, index) {
-                    // CRITICAL: Get the unique Document ID
-                    String docId = docs[index].id; 
-                    var data = docs[index].data() as Map<String, dynamic>;
+  itemCount: docs.length,
+  itemBuilder: (context, index) {
+    String docId = docs[index].id; 
+    var data = docs[index].data() as Map<String, dynamic>;
+    String providerEmail = data['providerEmail'] ?? ""; // Email used to link to profile
 
-                    return Card(
-                      key: ValueKey(docId), // Tell Flutter this card is unique
-                      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                      child: ListTile(
-                        leading: const CircleAvatar(child: Icon(Icons.person)),
-                        title: Text(data['name']?.toString() ?? "Service"),
-                        subtitle: Text("${data['area'] ?? ''} - ${data['city'] ?? ''}"),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // STAR BUTTON (Uses unique docId)
-                            StreamBuilder<DocumentSnapshot>(
-                              stream: FirebaseFirestore.instance
-                                  .collection('customer_profiles')
-                                  .doc(currentCustomer)
-                                  .collection('favorite_services')
-                                  .doc(docId) // Checking the specific unique ID
-                                  .snapshots(),
-                              builder: (context, favSnap) {
-                                bool isFav = favSnap.hasData && favSnap.data!.exists;
-                                return IconButton(
-                                  icon: Icon(isFav ? Icons.star : Icons.star_border, 
-                                             color: isFav ? Colors.orange : Colors.grey),
-                                  onPressed: () => _toggleFavorite(docId, data),
-                                );
-                              },
-                            ),
-                            // CALL BUTTON
-                            IconButton(
-                              icon: const Icon(Icons.phone, color: Colors.green),
-                              onPressed: () async {
-                                String providerEmail = data['providerEmail'] ?? ""; 
+    return Card(
+      key: ValueKey(docId),
+      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+      child: ListTile(
+        leading: const CircleAvatar(child: Icon(Icons.person)),
+        title: Text(data['name']?.toString() ?? "Service"),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("${data['area'] ?? ''} - ${data['city'] ?? ''}"),
+            const SizedBox(height: 4),
+            // --- NEW: FETCH PROVIDER NAME LOGIC ---
+            FutureBuilder<DocumentSnapshot>(
+              future: FirebaseFirestore.instance
+                  .collection('provider_profiles')
+                  .doc(providerEmail)
+                  .get(),
+              builder: (context, providerSnap) {
+                if (providerSnap.connectionState == ConnectionState.waiting) {
+                  return const Text("...", style: TextStyle(fontSize: 12));
+                }
+                
+                String providerName = "--"; // Default if name is empty
+                if (providerSnap.hasData && providerSnap.data!.exists) {
+                  var pData = providerSnap.data!.data() as Map<String, dynamic>;
+                  String fetchedName = pData['name']?.toString() ?? "";
+                  if (fetchedName.trim().isNotEmpty) {
+                    providerName = fetchedName;
+                  }
+                }
 
-                                if (providerEmail.isNotEmpty) {
-                                  // Look up the provider's actual profile
-                                  var providerDoc = await FirebaseFirestore.instance
-                                      .collection('provider_profiles') 
-                                      .doc(providerEmail)
-                                      .get();
-
-                                  if (providerDoc.exists) {
-                                    // Access the phone field from the profile document
-                                    String phone = providerDoc.data()?['phone']?.toString() ?? "";
-
-                                    if (phone.isNotEmpty) {
-                                      final Uri url = Uri(scheme: 'tel', path: phone);
-                                      if (await canLaunchUrl(url)) {
-                                        await launchUrl(url);
-                                      } else {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text("Could not open dialer.")),
-                                        );
-                                      }
-                                    } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text("This provider hasn't added a phone number.")),
-                                      );
-                                    }
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text("Provider profile not found.")),
-                                    );
-                                  }
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                return Text(
+                  "Provider: $providerName",
+                  style: const TextStyle(
+                    fontSize: 12, 
+                    fontWeight: FontWeight.bold, 
+                    color: Colors.teal
+                  ),
                 );
+              },
+            ),
+          ],
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // STAR BUTTON (Unchanged)
+            StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('customer_profiles')
+                  .doc(currentCustomer)
+                  .collection('favorite_services')
+                  .doc(docId)
+                  .snapshots(),
+              builder: (context, favSnap) {
+                bool isFav = favSnap.hasData && favSnap.data!.exists;
+                return IconButton(
+                  icon: Icon(isFav ? Icons.star : Icons.star_border, 
+                             color: isFav ? Colors.orange : Colors.grey),
+                  onPressed: () => _toggleFavorite(docId, data),
+                );
+              },
+            ),
+            // CALL BUTTON (Unchanged)
+            IconButton(
+              icon: const Icon(Icons.phone, color: Colors.green),
+              onPressed: () async {
+                if (providerEmail.isNotEmpty) {
+                  var providerDoc = await FirebaseFirestore.instance
+                      .collection('provider_profiles') 
+                      .doc(providerEmail)
+                      .get();
+
+                  if (providerDoc.exists) {
+                    String phone = providerDoc.data()?['phone']?.toString() ?? "";
+                    if (phone.isNotEmpty) {
+                      final Uri url = Uri(scheme: 'tel', path: phone);
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Could not open dialer.")),
+                        );
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("This provider hasn't added a phone number.")),
+                      );
+                    }
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Provider profile not found.")),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  },
+);
               },
             ),
           ),

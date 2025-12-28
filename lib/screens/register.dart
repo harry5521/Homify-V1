@@ -23,12 +23,11 @@ class _RegisterPageState extends State<RegisterPage> {
 
 void _handleRegister() async {
   if (_formKey.currentState!.validate()) {
-    // 1. Capture the data from controllers
     String email = _emailController.text.trim();
     String password = _passwordController.text; 
     String role = _selectedRole;
 
-    // 2. Show a loading indicator
+    // 1. Show a loading indicator
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -38,11 +37,31 @@ void _handleRegister() async {
     );
 
     try {
-      // 3. Insert Data into Firestore 'users' collection
-      // This will create the 'users' collection automatically if it doesn't exist
+      // --- NEW STEP: CHECK IF EMAIL EXISTS ---
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // Email already exists!
+        if (!mounted) return;
+        Navigator.pop(context); // Close loading spinner
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("This email is already registered. Please log in."),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return; // Stop the registration process here
+      }
+      // ---------------------------------------
+
+      // 2. Insert Data into Firestore 'users' collection
       await FirebaseFirestore.instance.collection('users').add({
         'email': email,
-        'password': password, // Note: In a production app, never store passwords in plain text
+        'password': password, 
         'role': role,
         'createdAt': FieldValue.serverTimestamp(),
       });
@@ -51,49 +70,42 @@ void _handleRegister() async {
       if (!mounted) return;
       Navigator.pop(context);
 
-      // 4. Print to terminal for confirmation
-      // print("--- USER DATA SAVED TO FIRESTORE ---");
-      // print("Email: $email | Role: $role");
-
-      // 5. Show Success Dialog and Navigate
+      // 3. Show Success Dialog
       showDialog(
-  context: context,
-  barrierDismissible: false,
-  builder: (context) => AlertDialog(
-    title: Row(
-      children: const [
-        Icon(Icons.check_circle, color: Colors.teal),
-        SizedBox(width: 10),
-        // Expanded prevents the text from pushing off the screen
-        Expanded(
-          child: Text(
-            "Registration Successful",
-            style: TextStyle(fontSize: 18), // Slightly smaller font helps on tiny screens
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.teal),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  "Registration Successful",
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+            ],
           ),
+          content: Text("Account for $email has been created. You can now log in."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); 
+                Navigator.pushReplacementNamed(context, '/login');
+              },
+              child: const Text(
+                "OK", 
+                style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold)
+              ),
+            ),
+          ],
         ),
-      ],
-    ),
-    content: Text("Account for $email has been created. You can now log in."),
-    actions: [
-      TextButton(
-        onPressed: () {
-          Navigator.pop(context); 
-          Navigator.pushReplacementNamed(context, '/login');
-        },
-        child: const Text(
-          "OK", 
-          style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold)
-        ),
-      ),
-    ],
-  ),
-);
+      );
     } catch (e) {
-      // Close the loading spinner if an error occurs
+      if (!mounted) return;
       Navigator.pop(context);
       
-      // Show error message
-      // print("Firestore Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Failed to register: ${e.toString()}"),

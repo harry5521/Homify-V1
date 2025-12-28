@@ -74,7 +74,7 @@ class AboutPage extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 60),
+            const SizedBox(height: 30),
 
             // 4. BRANDING FOOTER
             const Divider(indent: 60, endIndent: 60),
@@ -98,7 +98,7 @@ class AboutPage extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 60),
           ],
         ),
       ),

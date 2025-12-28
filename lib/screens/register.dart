@@ -57,29 +57,37 @@ void _handleRegister() async {
 
       // 5. Show Success Dialog and Navigate
       showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          title: const Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.teal),
-              SizedBox(width: 10),
-              Text("Registration Successful"),
-            ],
+  context: context,
+  barrierDismissible: false,
+  builder: (context) => AlertDialog(
+    title: Row(
+      children: const [
+        Icon(Icons.check_circle, color: Colors.teal),
+        SizedBox(width: 10),
+        // Expanded prevents the text from pushing off the screen
+        Expanded(
+          child: Text(
+            "Registration Successful",
+            style: TextStyle(fontSize: 18), // Slightly smaller font helps on tiny screens
           ),
-          content: Text("Account for $email has been created. You can now log in."),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close dialog
-                // Navigate to Login Screen
-                Navigator.pushReplacementNamed(context, '/login');
-              },
-              child: const Text("OK", style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold)),
-            ),
-          ],
         ),
-      );
+      ],
+    ),
+    content: Text("Account for $email has been created. You can now log in."),
+    actions: [
+      TextButton(
+        onPressed: () {
+          Navigator.pop(context); 
+          Navigator.pushReplacementNamed(context, '/login');
+        },
+        child: const Text(
+          "OK", 
+          style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold)
+        ),
+      ),
+    ],
+  ),
+);
     } catch (e) {
       // Close the loading spinner if an error occurs
       Navigator.pop(context);

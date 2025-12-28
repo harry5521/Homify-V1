@@ -16,14 +16,15 @@ class _FindServicesPageState extends State<FindServicesPage> {
 
   final List<Map<String, dynamic>> _categories = [
     {"name": "All", "icon": Icons.grid_view},
+    {"name": "Favorites", "icon": Icons.star, "color": Colors.orange},
     {"name": "Electrician", "icon": Icons.bolt},
     {"name": "Plumber", "icon": Icons.plumbing},
     {"name": "Cleaning", "icon": Icons.cleaning_services},
     {"name": "Painter", "icon": Icons.format_paint},
   ];
 
-  // Logic to toggle Favorites in Firestore
-  void _toggleFavorite(String providerEmail, Map<String, dynamic> serviceData) async {
+  // Modified to use unique docId to prevent the "multiple star" bug
+  void _toggleFavorite(String docId, Map<String, dynamic> serviceData) async {
     String? customerEmail = SessionManager.loggedInUserEmail;
     if (customerEmail == null) return;
 
@@ -31,7 +32,7 @@ class _FindServicesPageState extends State<FindServicesPage> {
         .collection('customer_profiles')
         .doc(customerEmail)
         .collection('favorite_services')
-        .doc(providerEmail);
+        .doc(docId); // Unique ID ensures only this specific row is toggled
 
     var doc = await favRef.get();
     if (doc.exists) {
@@ -46,6 +47,8 @@ class _FindServicesPageState extends State<FindServicesPage> {
 
   @override
   Widget build(BuildContext context) {
+    String? currentCustomer = SessionManager.loggedInUserEmail;
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -83,7 +86,7 @@ class _FindServicesPageState extends State<FindServicesPage> {
                 return GestureDetector(
                   onTap: () => setState(() => _selectedCategory = _categories[index]['name']),
                   child: Container(
-                    width: 80,
+                    width: 85,
                     margin: const EdgeInsets.all(5),
                     decoration: BoxDecoration(
                       color: isSelected ? Colors.teal : Colors.white,
@@ -93,8 +96,14 @@ class _FindServicesPageState extends State<FindServicesPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(_categories[index]['icon'], color: isSelected ? Colors.white : Colors.teal),
-                        Text(_categories[index]['name'], style: TextStyle(fontSize: 10, color: isSelected ? Colors.white : Colors.teal)),
+                        Icon(
+                          _categories[index]['icon'], 
+                          color: isSelected ? Colors.white : (_categories[index]['color'] ?? Colors.teal)
+                        ),
+                        Text(
+                          _categories[index]['name'], 
+                          style: TextStyle(fontSize: 10, color: isSelected ? Colors.white : Colors.teal)
+                        ),
                       ],
                     ),
                   ),
@@ -103,71 +112,123 @@ class _FindServicesPageState extends State<FindServicesPage> {
             ),
           ),
 
-          // 3. REAL-TIME LIST FROM FIRESTORE
+          // 3. REAL-TIME LIST
           Expanded(
-  child: StreamBuilder<QuerySnapshot>(
-    stream: FirebaseFirestore.instance.collection('services').snapshots(),
-    builder: (context, snapshot) {
-      if (snapshot.hasError) return const Center(child: Text("Error loading data"));
-      if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: Colors.teal));
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _selectedCategory == "Favorites"
+                  ? FirebaseFirestore.instance
+                      .collection('customer_profiles')
+                      .doc(currentCustomer)
+                      .collection('favorite_services')
+                      .snapshots()
+                  : FirebaseFirestore.instance.collection('services').snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) return const Center(child: Text("Error loading data"));
+                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: Colors.teal));
 
-      // --- SMART MULTI-WORD SEARCH ---
-List<QueryDocumentSnapshot> docs = snapshot.data!.docs.where((doc) {
-  try {
-    var data = doc.data() as Map<String, dynamic>;
-    
-    // 1. Get database values
-    String name = (data['name'] ?? "").toString().toLowerCase();
-    String area = (data['area'] ?? "").toString().toLowerCase();
-    
-    // 2. Split your search into separate words (e.g., "Carpenter Baldia" -> ["carpenter", "baldia"])
-    List<String> keywords = _searchQuery.trim().toLowerCase().split(" ");
+                var docs = snapshot.data!.docs.where((doc) {
+                  try {
+                    var data = doc.data() as Map<String, dynamic>;
+                    String name = (data['name'] ?? "").toString().toLowerCase();
+                    String area = (data['area'] ?? "").toString().toLowerCase();
+                    List<String> keywords = _searchQuery.trim().split(" ");
 
-    // 3. Category Filter (The Boxes)
-    bool matchesCategory = _selectedCategory == "All" || name == _selectedCategory.toLowerCase();
+                    bool matchesCategory = _selectedCategory == "All" || 
+                                         _selectedCategory == "Favorites" || 
+                                         name == _selectedCategory.toLowerCase();
 
-    // 4. Smart Search Filter 
-    // This checks if EVERY word you typed exists in either the 'name' or 'area'
-    bool matchesSearch = keywords.every((word) => 
-      name.contains(word) || area.contains(word)
-    );
+                    bool matchesSearch = keywords.every((word) => 
+                      name.contains(word) || area.contains(word)
+                    );
 
-    return matchesCategory && matchesSearch;
-  } catch (e) {
-    return false; // Skip any broken data to prevent red screen
-  }
-}).toList();
+                    return matchesCategory && matchesSearch;
+                  } catch (e) { return false; }
+                }).toList();
 
-      if (docs.isEmpty) return const Center(child: Text("No services found"));
+                if (docs.isEmpty) return const Center(child: Text("No records found"));
 
-      return ListView.builder(
-        itemCount: docs.length,
-        itemBuilder: (context, index) {
-          var data = docs[index].data() as Map<String, dynamic>;
-          
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-            child: ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.person)),
-              title: Text(data['name']?.toString() ?? "Service"),
-              subtitle: Text("${data['area'] ?? ''} - ${data['city'] ?? ''}"),
-              trailing: IconButton(
-                icon: const Icon(Icons.phone, color: Colors.green),
-                onPressed: () async {
-                  String phone = data['phone']?.toString() ?? "";
-                  if (phone.isNotEmpty) {
-                    final Uri url = Uri.parse("tel:$phone");
-                    await launchUrl(url);
-                  }
-                },
-              ),
+                return ListView.builder(
+                  itemCount: docs.length,
+                  itemBuilder: (context, index) {
+                    // CRITICAL: Get the unique Document ID
+                    String docId = docs[index].id; 
+                    var data = docs[index].data() as Map<String, dynamic>;
+
+                    return Card(
+                      key: ValueKey(docId), // Tell Flutter this card is unique
+                      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                      child: ListTile(
+                        leading: const CircleAvatar(child: Icon(Icons.person)),
+                        title: Text(data['name']?.toString() ?? "Service"),
+                        subtitle: Text("${data['area'] ?? ''} - ${data['city'] ?? ''}"),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // STAR BUTTON (Uses unique docId)
+                            StreamBuilder<DocumentSnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('customer_profiles')
+                                  .doc(currentCustomer)
+                                  .collection('favorite_services')
+                                  .doc(docId) // Checking the specific unique ID
+                                  .snapshots(),
+                              builder: (context, favSnap) {
+                                bool isFav = favSnap.hasData && favSnap.data!.exists;
+                                return IconButton(
+                                  icon: Icon(isFav ? Icons.star : Icons.star_border, 
+                                             color: isFav ? Colors.orange : Colors.grey),
+                                  onPressed: () => _toggleFavorite(docId, data),
+                                );
+                              },
+                            ),
+                            // CALL BUTTON
+                            IconButton(
+                              icon: const Icon(Icons.phone, color: Colors.green),
+                              onPressed: () async {
+                                String providerEmail = data['providerEmail'] ?? ""; 
+
+                                if (providerEmail.isNotEmpty) {
+                                  // Look up the provider's actual profile
+                                  var providerDoc = await FirebaseFirestore.instance
+                                      .collection('provider_profiles') 
+                                      .doc(providerEmail)
+                                      .get();
+
+                                  if (providerDoc.exists) {
+                                    // Access the phone field from the profile document
+                                    String phone = providerDoc.data()?['phone']?.toString() ?? "";
+
+                                    if (phone.isNotEmpty) {
+                                      final Uri url = Uri(scheme: 'tel', path: phone);
+                                      if (await canLaunchUrl(url)) {
+                                        await launchUrl(url);
+                                      } else {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text("Could not open dialer.")),
+                                        );
+                                      }
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text("This provider hasn't added a phone number.")),
+                                      );
+                                    }
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text("Provider profile not found.")),
+                                    );
+                                  }
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
-          );
-        },
-      );
-    },
-  ),
-),
+          ),
         ],
       ),
     );

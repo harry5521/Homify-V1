@@ -52,8 +52,8 @@ void _handleRegister() async {
       Navigator.pop(context);
 
       // 4. Print to terminal for confirmation
-      print("--- USER DATA SAVED TO FIRESTORE ---");
-      print("Email: $email | Role: $role");
+      // print("--- USER DATA SAVED TO FIRESTORE ---");
+      // print("Email: $email | Role: $role");
 
       // 5. Show Success Dialog and Navigate
       showDialog(
@@ -62,7 +62,7 @@ void _handleRegister() async {
         builder: (context) => AlertDialog(
           title: const Row(
             children: [
-              Icon(Icons.check_circle, color: Colors.green),
+              Icon(Icons.check_circle, color: Colors.teal),
               SizedBox(width: 10),
               Text("Registration Successful"),
             ],
@@ -85,7 +85,7 @@ void _handleRegister() async {
       Navigator.pop(context);
       
       // Show error message
-      print("Firestore Error: $e");
+      // print("Firestore Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Failed to register: ${e.toString()}"),
